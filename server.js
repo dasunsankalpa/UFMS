@@ -1,3 +1,7 @@
+// ...existing code...
+// ========== SINGLE BOOKING APPROVAL ========== 
+// (Place this after app is defined)
+
 // Core & libs
 const express = require('express');
 const mongoose = require('mongoose');
@@ -8,6 +12,7 @@ const fs = require('fs');
 const cron = require('node-cron');
 require('dotenv').config();
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 
 // App
 const app = express();
@@ -44,9 +49,6 @@ const transporter = nodemailer.createTransport({
 
 // ==== Email Template ====
 function bookingEmailTemplate({ fullname, status, facility, bookingDate, startTime, endTime, participants, purpose, cancellationReason }) {
-  const statusClass = status === "Approved" ? "#2ecc71"
-                   : status === "Cancelled" ? "#e74c3c"
-                   : "#f39c12";
   const statusText = status === "Approved" ? "Approved"
                    : status === "Cancelled" ? "Cancelled"
                    : "Pending";
@@ -61,7 +63,8 @@ function bookingEmailTemplate({ fullname, status, facility, bookingDate, startTi
       <div style="font-size:18px;margin-bottom:20px;color:#636e72;">Dear <b style="color:#273c75;">${fullname}</b>,<br>We are writing to update you about your booking request.</div>
       <div style="background:#f1f7ff;border-radius:15px;padding:18px 0;margin:32px 0 22px;text-align:center;border:1px solid #dcdde1;">
         <div style="font-size:13px;color:#636e72;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Booking Status</div>
-        <span style="display:inline-block;padding:12px 24px;border-radius:25px;font-weight:600;color:#fff;font-size:16px;background:${statusClass};">
+        <span style="display:inline-block;padding:12px 24px;border-radius:25px;font-weight:600;color:#fff;font-size:16px;
+          background:${status === "Approved" ? "#2ecc71" : status === "Pending" ? "#f39c12" : status === "Cancelled" ? "#e74c3c" : "#3498db"};">
           ${statusText}
         </span>
       </div>
@@ -142,6 +145,13 @@ function extractOwnerFromHeaders(req) {
   };
 }
 
+function normalizeOwnerId(value) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  return mongoose.Types.ObjectId.isValid(raw) ? raw : null;
+}
+
 // ==== User Schemas ====
 const studentLogSchema = new mongoose.Schema({
   fullname: String, email: String, password: String, idFront: String, idBack: String, createdAt: { type: Date, default: Date.now }
@@ -207,6 +217,7 @@ const bookingSchema = new mongoose.Schema({
   terms: Boolean,
   status: String, // "Pending", "Approved", "Cancelled"
   cancellationReason: String,
+  position: String, // Added position field
 
   // 🔗 Owner link — set by server from headers
   ownerId:   { type: mongoose.Schema.Types.ObjectId, index: true, sparse: true },
@@ -228,6 +239,7 @@ const approveBookingSchema = new mongoose.Schema({
   startTime: String, endTime: String, participants: Number,
   purpose: String, description: String, terms: Boolean, status: String,
   cancellationReason: String,
+  position: String,
 
   // carry owner link too
   ownerId:   { type: mongoose.Schema.Types.ObjectId, index: true, sparse: true },
@@ -262,6 +274,7 @@ const bookingHistorySchema = new mongoose.Schema({
   actionBy: String,
   actionAt: { type: Date, default: Date.now },
   cancellationReason: String,
+  position: String,
 
   // keep owner link for auditing / "My History"
   ownerId:   { type: mongoose.Schema.Types.ObjectId, index: true, sparse: true },
@@ -280,9 +293,11 @@ app.post('/api/register/union', upload.fields([{ name: 'idfront', maxCount: 1 },
     const idBack  = req.files['idback']  ? req.files['idback'][0].filename  : '';
     if (!fullname || !email || !password || !faculty || !idFront || !idBack)
       return res.status(400).json({ message: 'Missing required fields' });
-    const union = new UnionLog({ fullname, email, password, faculty, idFront, idBack });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const union = new UnionLog({ fullname, email, password: hashedPassword, faculty, idFront, idBack });
     await union.save();
-    res.json({ message: 'Faculty Union Member registered!' });
+    // Return userId for frontend
+    res.json({ message: 'Faculty Union Member registered!', userId: union._id });
   } catch (err) { 
     console.error('Union registration error:', err);
     res.status(500).json({ message: 'Error registering union member' });
@@ -297,9 +312,11 @@ app.post('/api/register/student', upload.fields([{ name: 'idfront', maxCount: 1 
     const idBack  = req.files['idback']  ? req.files['idback'][0].filename  : '';
     if (!fullname || !email || !password || !idFront || !idBack)
       return res.status(400).json({ message: 'Missing required fields' });
-    const student = new StudentLog({ fullname, email, password, idFront, idBack });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const student = new StudentLog({ fullname, email, password: hashedPassword, idFront, idBack });
     await student.save();
-    res.json({ message: 'Student registered!' });
+    // Return userId for frontend
+    res.json({ message: 'Student registered!', userId: student._id });
   } catch (err) { res.status(500).json({ message: 'Error registering student' }); }
 });
 app.post('/api/register/staff', async (req, res) => {
@@ -307,25 +324,33 @@ app.post('/api/register/staff', async (req, res) => {
     const { fullname, email, password } = req.body;
     if (!fullname || !email || !password)
       return res.status(400).json({ message: 'Missing required fields' });
-    const staff = new StaffLog({ fullname, email, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const staff = new StaffLog({ fullname, email, password: hashedPassword });
     await staff.save();
-    res.json({ message: 'Staff registered!' });
+    // Return userId for frontend
+    res.json({ message: 'Staff registered!', userId: staff._id });
   } catch (err) { res.status(500).json({ message: 'Error registering staff' }); }
 });
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     // Check union members first
-    const union = await UnionLog.findOne({ email, password });
-    if (union) return res.json({ success: true, role: 'union', fullname: union.fullname, userId: union._id, email: union.email, faculty: union.faculty });
+    const union = await UnionLog.findOne({ email });
+    if (union && await bcrypt.compare(password, union.password)) {
+      return res.json({ success: true, role: 'union', fullname: union.fullname, userId: union._id, email: union.email, faculty: union.faculty });
+    }
 
     // Then students (legacy)
-    const student = await StudentLog.findOne({ email, password });
-    if (student) return res.json({ success: true, role: 'student', fullname: student.fullname, userId: student._id, email: student.email });
+    const student = await StudentLog.findOne({ email });
+    if (student && await bcrypt.compare(password, student.password)) {
+      return res.json({ success: true, role: 'student', fullname: student.fullname, userId: student._id, email: student.email });
+    }
 
     // Finally staff
-    const staff = await StaffLog.findOne({ email, password });
-    if (staff)   return res.json({ success: true, role: 'staff',   fullname: staff.fullname,   userId: staff._id,   email: staff.email });
+    const staff = await StaffLog.findOne({ email });
+    if (staff && await bcrypt.compare(password, staff.password)) {
+      return res.json({ success: true, role: 'staff',   fullname: staff.fullname,   userId: staff._id,   email: staff.email });
+    }
     res.json({ success: false });
   } catch (err) { res.status(500).json({ success: false, message: 'Server error' }); }
 });
@@ -342,7 +367,7 @@ app.get('/api/users', async (req, res) => {
     res.json(users);
   } catch (err) { res.status(500).json({ message: 'Error fetching users' }); }
 });
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', requireAdmin, async (req, res) => {
   const { id } = req.params; const { type } = req.query;
   try {
     let deleted;
@@ -451,14 +476,58 @@ app.post('/api/booking', async (req, res) => {
   try {
     const entryData = { ...req.body };
     entryData.bookingDate = new Date(entryData.bookingDate);
-    entryData.status = "Pending";
+    const isEmergencyBooking =
+      entryData.isEmergency === true ||
+      (typeof entryData.purpose === 'string' && entryData.purpose.trim().toLowerCase() === 'emergency booking');
+    entryData.status = isEmergencyBooking ? "Approved" : "Pending";
+
+    // ✅ CHECK FACILITY STATUS BEFORE BOOKING
+    const facilityName = entryData.facility;
+    if (facilityName) {
+      try {
+        const facilityCollectionName = facilityName.trim().replace(/\s+/g, '').toLowerCase();
+        const FacilityModel = createFacilityModel(facilityCollectionName);
+        const facility = await FacilityModel.findOne({ facilityName: { $regex: new RegExp('^' + facilityName + '$', 'i') } });
+        
+        if (facility) {
+          const facilityStatus = (facility.status || 'available').toLowerCase();
+          if (facilityStatus === 'maintenance' || facilityStatus === 'unavailable') {
+            return res.status(400).json({ 
+              message: `This facility is currently ${facilityStatus === 'maintenance' ? 'under maintenance' : 'temporarily unavailable'}. Bookings cannot be made at this time.` 
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error checking facility status:', err);
+        // Continue with booking if facility check fails
+      }
+    }
 
     // Overwrite with header-provided identity
     const { ownerId, ownerRole, ownerEmail, ownerName } = extractOwnerFromHeaders(req);
-    entryData.ownerId    = ownerId    ?? entryData.ownerId ?? null;
+    const headerOwnerId = normalizeOwnerId(ownerId);
+    const bodyOwnerId = normalizeOwnerId(entryData.ownerId);
+    entryData.ownerId    = headerOwnerId ?? bodyOwnerId ?? null;
     entryData.ownerRole  = ownerRole  ?? entryData.ownerRole ?? null;
     entryData.ownerEmail = ownerEmail ?? entryData.ownerEmail ?? null;
     entryData.ownerName  = ownerName  ?? entryData.ownerName ?? null;
+
+    if (isEmergencyBooking) {
+      const approvedEntry = new ApproveBooking({
+        ...entryData,
+        originalBookingId: null
+      });
+      await approvedEntry.save();
+
+      await BookingHistory.create({
+        ...entryData,
+        status: "Approved",
+        actionBy: "system-emergency",
+        actionAt: new Date()
+      });
+
+      return res.json(approvedEntry);
+    }
 
     const entry = new Booking(entryData);
     await entry.save();
@@ -476,8 +545,11 @@ app.get('/api/my-bookings', async (req, res) => {
   try {
     const { ownerId, email } = req.query;
     const q = { $or: [{ status: { $exists: false } }, { status: "Pending" }] };
-    if (ownerId) q.ownerId = ownerId;
-    else if (email) q.ownerEmail = email;
+    if (ownerId) {
+      q.$and = [{ $or: [{ ownerId: ownerId }, { ownerEmail: email }] }];
+    } else if (email) {
+      q.$and = [{ $or: [{ ownerEmail: email }, { email: email }] }];
+    }
     const bookings = await Booking.find(q).sort({ bookingDate: -1 });
     res.json(bookings);
   } catch (err) {
@@ -491,8 +563,11 @@ app.get('/api/approved-bookings', async (req, res) => {
   try {
     const { ownerId, email } = req.query;
     const query = {};
-    if (ownerId) query.ownerId = ownerId;
-    else if (email) query.ownerEmail = email;
+    if (ownerId) {
+      query.$or = [{ ownerId: ownerId }, { ownerEmail: email }];
+    } else if (email) {
+      query.$or = [{ ownerEmail: email }, { email: email }];
+    }
     const approved = await ApproveBooking.find(query).sort({ bookingDate: -1 });
     res.json(approved);
   } catch (err) { 
@@ -853,7 +928,7 @@ app.post('/api/timetable/:collection', async (req, res) => {
   try {
     const { collection } = req.params;
     const decodedCollection = decodeURIComponent(collection);
-    const { date, times, bookedBy, bookingId } = req.body;
+    const { date, times, bookedBy, bookingId, faculty, eventType, additionalNotes, fullname, email, phone, position } = req.body;
     if (!decodedCollection || !date || !times || !bookedBy)
       return res.status(400).json({ error: "Missing required fields" });
 
@@ -861,7 +936,18 @@ app.post('/api/timetable/:collection', async (req, res) => {
     for (let time of times) {
       await Timetable.updateOne(
         { date, time },
-        { $set: { status: "booked", bookedBy, bookingId } },
+        { $set: { 
+          status: "booked", 
+          bookedBy, 
+          bookingId,
+          faculty: faculty || null,
+          eventType: eventType || null,
+          additionalNotes: additionalNotes || null,
+          fullname: fullname || bookedBy,
+          email: email || null,
+          phone: phone || null,
+          position: position || null
+        } },
         { upsert: true }
       );
     }
@@ -1204,6 +1290,18 @@ setInterval(() => {
 
 // Start
 const PORT = 3000;
-app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); }); 
+app.listen(PORT, () => { 
+  console.log(`Server running on port ${PORT}`);
+  console.log(`\n🌐 Opening browser...`);
+  
+  // Auto-open browser
+  const { exec } = require('child_process');
+  exec(`start http://localhost:${PORT}/index.html`);
+  
+  console.log(`\n📍 Available pages:`);
+  console.log(`   http://localhost:${PORT}/index.html`);
+  console.log(`   http://localhost:${PORT}/adminMAIN.html`);
+  console.log(`   http://localhost:${PORT}/facilitiesVIEW.html\n`);
+});
 
 

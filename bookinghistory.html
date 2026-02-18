@@ -2,104 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>LHMS - Booking History</title>
+  <title>UFMS - Booking History</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * { box-sizing: border-box; }
-    body {
-      background: #f5f7fa;
-      color: #333;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 30px;
-    }
-    .table-container {
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-    th {
-      background: #3498db;
-      color: white;
-      padding: 12px 8px;
-      text-align: left;
-      font-weight: bold;
-    }
-    td {
-      padding: 10px 8px;
-      border-bottom: 1px solid #eee;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
-      background-color: #f0f8ff;
-    }
-    .status {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      text-align: center;
-      display: inline-block;
-      min-width: 60px;
-    }
-    .approved { background: #d4edda; color: #155724; }
-    .cancelled { background: #f8d7da; color: #721c24; }
-    .pending { background: #fff3cd; color: #856404; }
-    .completed { background: #cce5ff; color: #004085; }
-    @media (max-width: 768px) {
-      .container { padding: 15px; }
-      th, td { padding: 8px 4px; font-size: 14px; }
-      .status { min-width: 50px; font-size: 11px; }
-    }
-    .search-bar {
-      margin-bottom: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .search-bar input,
-    .search-bar select {
-      padding: 8px 12px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-    }
-    .search-bar button {
-      padding: 8px 16px;
-      border-radius: 4px;
-      border: none;
-      background: #3498db;
-      color: #fff;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .search-bar button:hover {
-      background: #2980b9;
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#8B7355;font-size:17px}
+
+    .header{background:#3b444b;color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;height:90px;min-height:90px}
+    .header h1{font-size:24px;color:#fff;font-weight:900;mix-blend-mode:difference}
+    .header p{font-size:14px;margin-top:5px;color:#fff;font-weight:700;mix-blend-mode:difference}
+    .header-left{display:flex;align-items:center;gap:15px}
+    .logo{height:90px;width:90px;object-fit:cover;background:#fff;border-radius:50%;box-shadow:0 2px 16px rgba(0,0,0,0.18);border:2.5px solid #eee}
+    .back-btn{background:#CBB9A3;color:#3B444B;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:13px}
+    .back-btn:hover{background:#b8a68f;color:#3B444B}
+
+    .section{margin:20px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .section-header{padding:20px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+    .section-title{font-size:18px;font-weight:bold;color:#333}
+    
+    .search-bar{display:flex;flex-wrap:wrap;gap:10px;padding:20px;background:#f8f9fa;border-bottom:1px solid #ddd}
+    .search-bar input,.search-bar select{padding:8px 12px;border-radius:4px;border:1px solid #ccc;font-size:15px}
+    .btn{padding:8px 16px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+    .btn-primary{background:#3C1A47;color:#fff}
+    .btn-primary:hover{background:#2a1233}
+
+    .table-container{overflow-x:auto;padding:20px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 15px;text-align:left;border-bottom:1px solid #ddd}
+    th{background:#CBB9A3;font-weight:bold;color:#3C1A47;font-size:12px;text-transform:uppercase}
+    tr:hover{background:#f8f9fa}
+
+    .status{padding:4px 8px;border-radius:12px;font-size:11px;font-weight:bold;text-transform:uppercase}
+    .status.approved{background:#d4edda;color:#155724}
+    .status.cancelled{background:#f8d7da;color:#721c24}
+    .status.completed{background:#d1ecf1;color:#0c5460}
+    .status.pending{background:#fff3cd;color:#856404}
+
+    @media (max-width:768px){
+      .header{flex-direction:column;text-align:center;gap:10px}
+      .logo{height:70px;width:70px}
+      .header h1{font-size:18px}
+      .header p{font-size:12px}
+      .search-bar{flex-direction:column}
+      .search-bar input,.search-bar select,.btn{width:100%}
+      table{font-size:12px}
+      th,td{padding:8px}
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Booking History</h1>
+  <div class="header">
+    <div class="header-left">
+      <div>
+        <h1>Booking History</h1>
+        <p>View all facility bookings</p>
+      </div>
+    </div>
+    <button class="back-btn" onclick="window.location.href='adminMAIN.html'">← Back to Dashboard</button>
+  </div>
 
+  <div class="section">
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Search name, facility, or email...">
       <select id="statusFilter">
@@ -113,9 +75,8 @@
         <option value="Computer Lab">Computer Lab</option>
         <option value="Seminar Hall">Seminar Hall</option>
       </select>
-      <button onclick="applyFilters()">Search</button>
+      <button class="btn btn-primary" onclick="applyFilters()">Search</button>
     </div>
-
     <div class="table-container">
       <table>
         <thead>
@@ -133,11 +94,12 @@
           </tr>
         </thead>
         <tbody id="bookings">
-          <!-- Data loads here -->
+          <tr><td colspan="10" style="text-align:center;color:#999;">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
+
   <script>
     let bookingHistory = [];
     function formatDate(date) {
@@ -223,7 +185,7 @@
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('statusFilter').addEventListener('change', applyFilters);
     document.getElementById('facilityFilter').addEventListener('change', applyFilters);
-    document.addEventListener('DOMContentLoaded', loadData);
+    loadData();
   </script>
 </body>
 </html>

@@ -3,22 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LHMS - Recent Bookings</title>
+  <title>UFMS - Recent Bookings</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
-    body { background-color: #f5f7fa; color: #333; line-height: 1.6; padding: 20px;}
-    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
+    body { background:#8B7355; color: #333; line-height: 1.6; padding: 20px;}
+    .container { max-width: 1200px; margin: 0 auto; background: transparent; padding: 20px; border-radius: 8px;}
     h1 { color: #2c3e50; margin-bottom: 20px; text-align: center;}
     .search-filter { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
     .search-filter input, .search-filter select {
       padding: 10px 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; flex: 1; min-width: 200px;
     }
     .search-filter button {
-      padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;
+      padding: 10px 20px; background-color: #3C1A47; color: white; border: none; border-radius: 5px; cursor: pointer;
     }
-    .bookings-table { width: 100%; border-collapse: collapse; margin-top: 20px;}
-    .bookings-table th, .bookings-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0;}
-    .bookings-table th { background-color: #2c3e50; color: white; position: sticky; top: 0;}
+    .search-filter button:hover { background-color: #2a1233; }
+    .bookings-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 20px;}
+    .bookings-table th, .bookings-table td { padding: 8px 12px; text-align: left; line-height: 1.4;}
+    .bookings-table th { background:#3b444b; color: white; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;}
+    .bookings-table tbody tr { background: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .bookings-table tbody tr td:first-child { border-radius: 8px 0 0 8px; }
+    .bookings-table tbody tr td:last-child { border-radius: 0 8px 8px 0; }
+    .bookings-table tbody td { font-size: 0.95rem;}
     .status { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;}
     .pending   { background-color: #fff3cd; color: #856404;}
     .approved  { background-color: #d4edda; color: #155724;}
@@ -30,8 +35,8 @@
     .action-btn:disabled { opacity: 0.5; pointer-events: none;}
     .action-btn:hover { opacity: 0.9; transform: translateY(-1px);}
     .button-wrapper { display: flex; justify-content: center; margin-top: 30px;}
-    .submit-btn { background-color: #3498db; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer;}
-    .submit-btn:hover { background-color: #2980b9;}
+    .submit-btn { background-color: #3C1A47; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer;}
+    .submit-btn:hover { background-color: #2a1233;}
     #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999;}
     .toast { display: flex; align-items: center; min-width: 200px; margin-bottom: 10px; padding: 12px 16px; border-radius: 4px; color: #fff; font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,0.2); opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease;}
     .toast.show { opacity: 1; transform: translateY(0);}
@@ -42,8 +47,8 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      background: #1d87c6;
-      color: #fff;
+      background: #CBB9A3;
+      color: #3C1A47;
       border: none;
       border-radius: 18px;
       padding: 6px 14px 6px 10px;
@@ -55,7 +60,7 @@
       transition: background 0.2s;
       box-shadow: 0 1px 4px rgba(44,62,80,0.07);
     }
-    .admin-main-btn:hover { background: #176fa2; }
+    .admin-main-btn:hover { background: #b8a68f; }
     .admin-main-btn svg { width: 16px; height: 16px; }
   </style>
 </head>
@@ -63,7 +68,7 @@
   <div class="container">
     <button class="admin-main-btn" onclick="goToAdminMain()">
       <svg viewBox="0 0 20 20" fill="currentColor">
-        <path d="M6.293 9.293a1 1 0 011.414 0L10 11.586V4a1 1 0 112 0v7.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
       </svg>
       Admin Main
     </button>
@@ -74,13 +79,15 @@
         <option value="">All Status</option>
         <option value="Pending">Pending</option>
         <option value="Approved">Approved</option>
-        <option value="Cancelled">Cancelled</option>
       </select>
       <select id="facilityFilter">
         <option value="">All Facilities</option>
         <option value="Lecture Hall">Lecture Hall</option>
         <option value="Computer Lab">Computer Lab</option>
-        <option value="Seminar Hall">Seminar Hall</option>
+        <option value="Seminar Room">Seminar Room</option>
+        <option value="Auditorium">Auditorium</option>
+        <option value="Meeting Room">Meeting Room</option>
+        <option value="Conference Hall">Conference Hall</option>
       </select>
       <button onclick="applyFilters()">Search</button>
     </div>
@@ -90,8 +97,7 @@
           <th>Booking ID</th>
           <th>Facility</th>
           <th>Booked By</th>
-          <th>Date & Time</th>
-          <th>Status</th>
+          <th>Booking Time</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -115,7 +121,8 @@
     function formatDate(date) {
       if (!date) return '';
       const d = new Date(date);
-      return isNaN(d) ? date : d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      // Show only date in Sri Jayawardanapura (Asia/Colombo) timezone
+      return isNaN(d) ? date : d.toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' });
     }
 
     function statusBadge(status) {
@@ -138,7 +145,7 @@
       const tbody = document.querySelector('.bookings-table-body');
       tbody.innerHTML = '';
       if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;">No bookings found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">No bookings found</td></tr>';
         return;
       }
       data.forEach(b => {
@@ -147,11 +154,8 @@
         row.innerHTML = `
           <td class="booking-id">${b._id}</td>
           <td>${b.facility || 'N/A'}</td>
-          <td>${b.fullname || 'N/A'} (${b.email || ''})</td>
-          <td>${formatDate(b.bookingDate)}${b.startTime ? ' • ' + b.startTime : ''}${b.endTime ? '-' + b.endTime : ''}</td>
-          <td>
-            ${statusBadge(b.status)}
-          </td>
+          <td>${b.fullname || b.bookedBy || 'N/A'}${b.position ? '<br><span style="color:#666; font-size:inherit;">Position: ' + b.position + '</span>' : ''}</td>
+          <td>${b.bookingDate ? formatDate(b.bookingDate) + '<br>' : ''}${b.startTime || 'N/A'}${b.endTime ? ' - ' + b.endTime : ''}<br>${statusBadge(b.status || 'Pending')}</td>
           <td>
             <button class="action-btn approve-btn" ${b.status === 'Approved' ? 'disabled' : ''}>Approve</button>
             <button class="action-btn cancel-btn"  ${b.status === 'Cancelled' ? 'disabled' : ''}>Cancel</button>
@@ -202,6 +206,17 @@
           } else if (obj) {
             const idx = actionBookings.findIndex(x => x._id === id);
             if (idx !== -1) actionBookings[idx] = { ...obj, status: 'Cancelled', cancellationReason: reason };
+          }
+        });
+      });
+
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const row = btn.closest('tr');
+          const obj = bookingsData.find(x => x._id === row.querySelector('.booking-id').textContent);
+          if (obj && obj.facility && obj.bookingDate) {
+            const dateStr = new Date(obj.bookingDate).toISOString().split('T')[0];
+            window.location.href = `timetable.html?admin=true&facility=${encodeURIComponent(obj.facility)}&date=${dateStr}`;
           }
         });
       });
@@ -262,7 +277,7 @@
         filtered = filtered.filter(b => (b.status || 'Pending') === status);
       }
       if (facility) {
-        filtered = filtered.filter(b => (b.facility || '') === facility);
+        filtered = filtered.filter(b => (b.facility || '').toLowerCase().includes(facility.toLowerCase()));
       }
       renderTable(filtered);
     }

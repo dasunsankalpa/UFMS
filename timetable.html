@@ -2,11 +2,11 @@
   <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>LHMS - Facility Timetable</title>
+    <title>UFMS - Facility Timetable</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
       body {
-        background: #e6eaff;
+        background: #8B7355;
         color: #333;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
@@ -14,17 +14,19 @@
         font-size: 17px;
       }
       .container {
-        max-width: 1100px;
+        max-width: 900px;
         margin: 0 auto;
-        background: #e0e7ff;
+        background: #8B7355;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-        padding: 22px 10px 18px 10px;
+        padding: 10px 10px 18px 10px;
         min-height: 100vh;
+        position: relative;
       }
       h1 {
         text-align: center;
         color: #2c3e50;
+        margin-top: 0;
         margin-bottom: 10px;
         font-size: 2.1rem;
         font-weight: bold;
@@ -46,7 +48,7 @@
         border: 1.3px solid #d2d9e9;
         border-radius: 7px;
         cursor: pointer;
-        font-size: 0.95rem;
+        font-size: 0.8rem;
         min-width: 90px;
         max-width: 240px;
         text-align: center;
@@ -57,23 +59,29 @@
         box-shadow: 0 1px 4px #dae3f533;
       }
       .facility-btn:hover, .facility-btn:focus {
-        background: #e2f1ff;
-        border-color: #8ec3ff;
-        color: #1564b3;
+        background: #e8e8e8;
+        border-color: #999;
+        color: #333;
         outline: none;
+        box-shadow: 0 0 15px rgba(153, 153, 153, 0.6);
       }
       .facility-btn.active {
-        background: linear-gradient(90deg,#2494fa 70%,#3bb5ff 100%);
+        background: #3C1A47;
         color: #fff;
-        border: 2px solid #176dcc;
+        border: 2px solid #2a1233;
         font-weight: bold;
-        box-shadow: 0 4px 14px #57baff17;
+        box-shadow: 0 4px 14px rgba(60, 26, 71, 0.3), 0 0 20px rgba(60, 26, 71, 0.5);
         transform: scale(1.04);
         z-index: 2;
+        animation: shine 2s ease-in-out infinite;
+      }
+      @keyframes shine {
+        0%, 100% { box-shadow: 0 4px 14px rgba(60, 26, 71, 0.3), 0 0 20px rgba(60, 26, 71, 0.5); }
+        50% { box-shadow: 0 4px 18px rgba(60, 26, 71, 0.5), 0 0 30px rgba(60, 26, 71, 0.8); }
       }
       /* My Bookings Button Styling */
 .my-bookings-btn {
-  background: linear-gradient(135deg, #6f42c1 0%, #8e44ad 100%);
+  background: #3b444b;
   color: white;
   border: none;
   border-radius: 8px;
@@ -82,16 +90,16 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(111, 66, 193, 0.3);
+  box-shadow: 0 2px 10px rgba(59, 68, 75, 0.3);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 .my-bookings-btn:hover {
-  background: linear-gradient(135deg, #5a2c8a 0%, #732d91 100%);
+  background: #2a3138;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(111, 66, 193, 0.4);
+  box-shadow: 0 4px 15px rgba(59, 68, 75, 0.4);
 }
 .my-bookings-btn:active {
   transform: translateY(0);
@@ -106,14 +114,24 @@
 }
 
       .week-navigation { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
-      .nav-btn { background: #007bff; color: white; border: none; border-radius: 6px; padding: 7px 16px; cursor: pointer; font-size: 0.99rem; }
-      .nav-btn:hover:not([disabled]) { background: #0056b3; }
-      .nav-btn[disabled] { background: #ccc; cursor: not-allowed; }
+      .nav-btn { background: #999; color: white; border: none; border-radius: 6px; padding: 7px 16px; cursor: pointer; font-size: 0.99rem; transition: all 0.3s; }
+      .nav-btn:hover:not([disabled]):not(.active-week) { background: #777; box-shadow: 0 0 15px rgba(119, 119, 119, 0.6); }
+      .nav-btn.active-week { background: #3C1A47 !important; color: white !important; animation: shine 2s ease-in-out infinite !important; box-shadow: 0 4px 14px rgba(60, 26, 71, 0.3), 0 0 20px rgba(60, 26, 71, 0.5) !important; cursor: default !important; }
+      .nav-btn[disabled]:not(.active-week) { background: #ccc; cursor: not-allowed; animation: none; }
       .current-week { font-weight: bold; color: #222; font-size: 1.04rem; margin: 0 8px; }
 
       .admin-controls {
-        display:flex;gap:10px;justify-content:center;align-items:center;margin:10px 0 16px;
+        display:none;gap:10px;justify-content:center;align-items:center;margin:10px 0 16px;
         flex-wrap: wrap;
+      }
+      .admin-controls.show {
+        display:flex;
+      }
+      .admin-only {
+        display:none !important;
+      }
+      .admin-only.show {
+        display:inline-flex !important;
       }
       .admin-controls input[type="password"] {
         padding:6px 10px;border:1px solid #ccc;border-radius:6px;min-width:260px;
@@ -128,13 +146,31 @@
       .selected-color { background: #28a745; }
 
       .timetable-container { overflow-x: auto; }
-      .timetable { width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd; }
-      .timetable th { background: #f8f9fa; color: #333; font-weight: bold; padding: 8px 6px; text-align: center; border: 1px solid #ddd; font-size: 0.98rem; }
-      .timetable td { border: 1px solid #ddd; text-align: center; padding: 8px 6px; min-width: 55px; height: 32px; font-size: 0.98rem; background: #f8f9fa; color: #666; cursor: pointer; }
-      .timetable td.selected { background: #28a745; color: white; font-weight: bold; }
-      .timetable td.booked { background: #e74c3c; color: white; font-weight: bold; cursor: not-allowed !important; }
-      .timetable td:hover:not(.selected):not(.booked) { background: #e9ecef; }
-      .time-col { background: #f1f3f4 !important; font-weight: bold !important; color: #333 !important; cursor: default !important; }
+      .timetable { width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+      .timetable th { background: #4a5568; color: white; font-weight: bold; padding: 6px 4px; text-align: center; border: 1px solid #2d3748; font-size: 0.85rem; }
+      .timetable td { border: 1px solid #e2e8f0; text-align: center; padding: 4px 3px; min-width: 40px; height: 45px; font-size: 0.85rem; background: #f8f9fa; color: #666; cursor: pointer; transition: all 0.2s; }
+      .timetable td.selected { background: #28a745; color: white; font-weight: bold; transform: scale(1.05); }
+      .timetable td.booked { background: #e74c3c; color: white; font-weight: bold; cursor: pointer !important; }
+      .timetable td.booked.highlight { box-shadow: 0 0 15px rgba(231, 76, 60, 0.9); transform: scale(1.05); z-index: 10; }
+      .timetable td:hover:not(.selected):not(.booked) { background: #e9ecef; transform: scale(1.02); }
+      .time-col { background: #4a5568 !important; font-weight: bold !important; color: white !important; cursor: default !important; }
+
+      /* Booking Details Modal */
+      .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+      .modal-overlay.show { display: flex; }
+      .modal-content { background: rgba(50, 50, 50, 0.95); border-radius: 12px; padding: 30px; max-width: 520px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: modalSlideIn 0.3s ease; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; backdrop-filter: blur(10px); }
+      @keyframes modalSlideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; border-bottom: 1px solid rgba(200,200,200,0.15); padding-bottom: 15px; }
+      .modal-title { font-size: 1.4rem; font-weight: 500; color: rgba(220,220,220,0.95); letter-spacing: 0.3px; }
+      .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: rgba(180,180,180,0.6); line-height: 1; transition: color 0.2s; }
+      .modal-close:hover { color: #e74c3c; }
+      .modal-body { line-height: 1.7; }
+      .detail-row { display: flex; margin-bottom: 15px; padding: 12px; background: rgba(70,70,70,0.4); border-radius: 6px; transition: transform 0.2s; border: 1px solid rgba(150,150,150,0.1); }
+      .detail-row:hover { transform: translateX(3px); background: rgba(80,80,80,0.5); }
+      .detail-icon { font-size: 1.2rem; margin-right: 12px; min-width: 30px; color: rgba(180,180,180,0.7); }
+      .detail-content { flex: 1; }
+      .detail-label { font-weight: 500; color: rgba(160,160,160,0.7); font-size: 0.8rem; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+      .detail-value { color: rgba(220,220,220,0.9); font-size: 0.95rem; line-height: 1.5; font-weight: 400; }
 
       .actions {
         display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;
@@ -153,13 +189,50 @@
         .facility-selector { gap: 6px;}
         .facility-btn { font-size: 0.9rem; min-width: 70px; max-width: 98vw; padding: 4px 8px;}
         .timetable th, .timetable td { min-width: 35px; font-size: 0.93rem; padding: 5px 2px; }
+        .user-account-icon { top: 15px; right: 15px; width: 45px; height: 45px; }
+        .user-account-icon svg { width: 24px; height: 24px; }
       }
+      .user-account-icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        background: transparent;
+        border: none;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: #3C1A47;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        filter: drop-shadow(0 2px 4px rgba(60, 26, 71, 0.3));
+        animation: iconShine 2s ease-in-out infinite;
+      }
+      @keyframes iconShine {
+        0%, 100% { filter: drop-shadow(0 2px 4px rgba(60, 26, 71, 0.4)) drop-shadow(0 0 8px rgba(60, 26, 71, 0.3)); }
+        50% { filter: drop-shadow(0 4px 8px rgba(60, 26, 71, 0.6)) drop-shadow(0 0 12px rgba(60, 26, 71, 0.5)); }
+      }
+      .user-account-icon:hover {
+        transform: translateY(-2px) scale(1.1);
+        animation: none;
+        filter: drop-shadow(0 4px 8px rgba(60, 26, 71, 0.4));
+      }
+      .user-account-icon svg { width: 28px; height: 28px; }
     </style>
   </head>
   <body>
   <div class="container">
-    <h1>Facility Timetable</h1>
-    <div class="subtitle">Select 1–9 adjacent slots in a day (users). Admins can select across multiple days and times.</div>
+    <button id="accountBtn" class="user-account-icon" title="My Account">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-3.5 3.5-6 8-6s8 2.5 8 6"/>
+      </svg>
+    </button>
+    <h1>FACILITY TIMETABLE</h1>
 
     <div class="facility-selector" id="facility-selector"></div>
 
@@ -173,15 +246,12 @@
     <!-- Admin controls -->
     
     <div class="admin-controls">
-  <label class="pill">
+  <label class="pill admin-only">
     <input type="checkbox" id="admin-mode" />
     <strong>Admin multi-select mode</strong>
   </label>
-  <input id="admin-key" type="password" placeholder="Admin API key" style="display:none;" />
-  <button class="btn btn-secondary" id="clear-selection" title="Clear all selected cells">Clear Selection</button>
-  <a href="user.html" class="my-bookings-btn">
-    📅 My Bookings
-  </a>
+  <input id="admin-key" type="password" placeholder="Admin API key" style="display:none;" class="admin-only" />
+  <button class="btn btn-secondary admin-only" id="clear-selection" title="Clear all selected cells">Clear Selection</button>
 </div>
 
     <div class="legend">
@@ -289,13 +359,64 @@
     return [...Array(7)].map((_,i)=> addDays(base,i));
   }
   function updateWeekNav() {
+    // Emergency booking filter: check for ?emergency=1 in URL
+    const params = new URLSearchParams(window.location.search);
+    const isEmergency = params.get('emergency') === '1';
+    if (isEmergency) {
+      selectedWeekOffset = 0; // Always show current week
+    }
     const weekDates = getWeekDates(selectedWeekOffset);
     const start = formatDate(weekDates[0]);
     const end = formatDate(weekDates[6]);
-    document.getElementById('week-label').textContent = `${start} - ${end}`;
+    if (isEmergency) {
+      // Emergency banner
+      document.getElementById('week-label').innerHTML = '<span style="color:#e74c3c;font-weight:bold;font-size:1.13em;background:#fff3f3;padding:6px 18px;border-radius:8px;box-shadow:0 2px 8px #e74c3c33;">🚨 EMERGENCY BOOKING - TODAY ONLY</span>';
+      // Hide week navigation
+      document.getElementById('prev-week').style.display = 'none';
+      document.getElementById('this-week').style.display = 'none';
+      document.getElementById('next-week').style.display = 'none';
+    } else {
+      document.getElementById('week-label').textContent = `${start} - ${end}`;
+      document.getElementById('prev-week').style.display = '';
+      document.getElementById('this-week').style.display = '';
+      document.getElementById('next-week').style.display = '';
+      document.getElementById('prev-week').disabled = (selectedWeekOffset===-1);
+      document.getElementById('next-week').disabled = (selectedWeekOffset===1);
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active-week'));
+      const thisWeekBtn = document.getElementById('this-week');
+      const prevWeekBtn = document.getElementById('prev-week');
+      const nextWeekBtn = document.getElementById('next-week');
+      if (selectedWeekOffset === 0) {
+        thisWeekBtn.classList.add('active-week');
+        thisWeekBtn.disabled = true;
+      } else {
+        thisWeekBtn.disabled = false;
+      }
+      if (selectedWeekOffset === -1) {
+        prevWeekBtn.classList.add('active-week');
+      }
+      if (selectedWeekOffset === 1) {
+        nextWeekBtn.classList.add('active-week');
+      }
+    }
     document.getElementById('prev-week').disabled = (selectedWeekOffset===-1);
-    document.getElementById('this-week').disabled = (selectedWeekOffset===0);
     document.getElementById('next-week').disabled = (selectedWeekOffset===1);
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active-week'));
+    const thisWeekBtn = document.getElementById('this-week');
+    const prevWeekBtn = document.getElementById('prev-week');
+    const nextWeekBtn = document.getElementById('next-week');
+    if (selectedWeekOffset === 0) {
+      thisWeekBtn.classList.add('active-week');
+      thisWeekBtn.disabled = true;
+    } else {
+      thisWeekBtn.disabled = false;
+    }
+    if (selectedWeekOffset === -1) {
+      prevWeekBtn.classList.add('active-week');
+    }
+    if (selectedWeekOffset === 1) {
+      nextWeekBtn.classList.add('active-week');
+    }
   }
   function clearSelectedCells() {
     currentSelectedCells.forEach(td => td.classList.remove('selected'));
@@ -315,19 +436,60 @@
   /* ========= RENDER ========= */
   async function renderTable() {
     clearSelectedCells();
+    
+    // ✅ CHECK IF FACILITY IS AVAILABLE BEFORE RENDERING TIMETABLE
+    const currentFacility = facilities.find(f => f.facilityName === selectedFacilityLabel);
+    if (currentFacility) {
+      const facilityStatus = (currentFacility.status || 'available').toLowerCase();
+      if (facilityStatus === 'maintenance' || facilityStatus === 'unavailable') {
+        const message = facilityStatus === 'maintenance' 
+          ? '🔴 <strong>This facility is currently under maintenance.</strong><br>Bookings cannot be made at this time.'
+          : '🔴 <strong>This facility is temporarily unavailable.</strong><br>Bookings cannot be made at this time.';
+        document.getElementById('timetable-container').innerHTML = `<div style="text-align:center; padding:40px 20px; background:#fff5f5; border:2px solid #e74c3c; border-radius:8px; color:#c0392b; font-size:1.1rem; line-height:1.6;">${message}</div>`;
+        document.getElementById('book-selected-btn').disabled = true;
+        return;
+      }
+    }
+    
     await loadBookedSlots();
     const weekDates = getWeekDates(selectedWeekOffset);
+    // Emergency mode: only show today
+    const params = new URLSearchParams(window.location.search);
+    const isEmergency = params.get('emergency') === '1';
     let html = `<table class="timetable"><thead><tr><th>Time</th>`;
-    for(let i=0;i<7;i++) html += `<th>${days[i]}<br><span style="font-weight:normal;font-size:.85em;">${formatDate(weekDates[i])}</span></th>`;
+    let dayIndexes = [...Array(7).keys()];
+    if (isEmergency) {
+      // Only show today's column (relative to current week)
+      const today = new Date();
+      const todayISO = toISODate(today);
+      // Find today in the current weekDates
+      let todayIdx = -1;
+      for (let i = 0; i < weekDates.length; i++) {
+        if (toISODate(weekDates[i]) === todayISO) {
+          todayIdx = i;
+          break;
+        }
+      }
+      if (todayIdx === -1) {
+        // If today is not in the current week, fallback to first day
+        todayIdx = 0;
+      }
+      dayIndexes = [todayIdx];
+    }
+    for (let i of dayIndexes) {
+      const thClass = (selectedWeekOffset === 0) ? 'selected-week' : '';
+      html += `<th class="${thClass}">${days[i]}<br><span style=\"font-weight:normal;font-size:.85em;\">${formatDate(weekDates[i])}</span></th>`;
+    }
     html += `</tr></thead><tbody>`;
     for(let t=0;t<times.length;t++) {
       html += `<tr>`;
       html += `<td class="time-col">${times[t]}</td>`;
-      for(let d=0;d<7;d++) {
+      for (let d of dayIndexes) {
         const isoDate = toISODate(weekDates[d]);
         const slotObj = bookedSlots[isoDate] && bookedSlots[isoDate][normalizeTime(times[t])];
         const isBooked = !!slotObj;
-        html += `<td class="viewonly${isBooked?' booked':''}" data-row-index="${t}" data-col-index="${d}" data-day="${days[d]}" data-date="${formatDate(weekDates[d])}" data-isodate="${isoDate}" data-time="${times[t]}" ${isBooked?'':'tabindex="0"'}></td>`;
+        const tdClass = (selectedWeekOffset === 0) ? 'viewonly' + (isBooked ? ' booked' : '') + ' selected-week' : 'viewonly' + (isBooked ? ' booked' : '');
+        html += `<td class=\"${tdClass}\" data-row-index=\"${t}\" data-col-index=\"${d}\" data-day=\"${days[d]}\" data-date=\"${formatDate(weekDates[d])}\" data-isodate=\"${isoDate}\" data-time=\"${times[t]}\" ${isBooked?'':'tabindex="0"'}></td>`;
       }
       html += `</tr>`;
     }
@@ -339,7 +501,24 @@
     // Click handler for AVAILABLE cells (select for booking)
     document.querySelectorAll('.timetable td.viewonly:not(.booked)').forEach(td => {
       td.onclick = function() {
-        const adminMode = adminModeCheckbox.checked;
+        const adminModeCheckbox = document.getElementById('admin-mode');
+        const adminMode = adminModeCheckbox && adminModeCheckbox.checked;
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdminAccess = urlParams.get('admin') === 'true';
+
+        // Check if slot is in the past (only for non-admin users)
+        if (!adminMode && !isAdminAccess) {
+          const slotDate = new Date(td.dataset.isodate);
+          const slotTime = td.dataset.time.split('-')[0]; // Get start time (e.g., "8.00")
+          const [hours, minutes] = slotTime.split('.').map(Number);
+          slotDate.setHours(hours, minutes || 0, 0, 0);
+          
+          const now = new Date();
+          if (slotDate < now) {
+            alert("You cannot select past time slots. Please choose a future time.");
+            return;
+          }
+        }
 
         // If already selected, toggle off
         if (td.classList.contains('selected')) {
@@ -372,28 +551,121 @@
       };
     });
 
-    // === BOOKED (red) cells — attach release handler ONLY when Admin mode is ON ===
-    if (adminModeCheckbox.checked) {
-      document.querySelectorAll('.timetable td.booked').forEach(td => {
-        td.onclick = async function () {
+    // === BOOKED (red) cells — show details for all users, release for admin ===
+    document.querySelectorAll('.timetable td.booked').forEach(td => {
+      td.style.cursor = 'pointer';
+      
+      // Hover to highlight related bookings
+      td.onmouseenter = function() {
+        const iso = td.dataset.isodate;
+        const timeNorm = normalizeTime(td.dataset.time);
+        const slotData = bookedSlots[iso] && bookedSlots[iso][timeNorm];
+        if (!slotData || !slotData.bookingId) return;
+        
+        // Highlight all cells with same bookingId
+        document.querySelectorAll('.timetable td.booked').forEach(cell => {
+          const cellIso = cell.dataset.isodate;
+          const cellTime = normalizeTime(cell.dataset.time);
+          const cellData = bookedSlots[cellIso] && bookedSlots[cellIso][cellTime];
+          if (cellData && cellData.bookingId === slotData.bookingId) {
+            cell.classList.add('highlight');
+          }
+        });
+      };
+      
+      td.onmouseleave = function() {
+        document.querySelectorAll('.timetable td.booked').forEach(cell => {
+          cell.classList.remove('highlight');
+        });
+      };
+      
+      td.onclick = async function () {
+        const iso = td.dataset.isodate;
+        const timeNorm = normalizeTime(td.dataset.time);
+        const slotData = bookedSlots[iso] && bookedSlots[iso][timeNorm];
+        
+        if (!slotData) return;
+        
+        // Show booking details for all users
+        const details = `📅 BOOKING DETAILS\n\n` +
+          `👤 Booked By: ${slotData.bookedBy || 'N/A'}\n` +
+          `🏫 Faculty: ${slotData.faculty || 'N/A'}\n` +
+          `📆 Date: ${slotData.date || iso}\n` +
+          `⏰ Time: ${slotData.time || timeNorm}\n` +
+          `🎯 Event Type: ${slotData.eventType || 'N/A'}\n` +
+          `📝 Additional Notes: ${slotData.additionalNotes || 'None'}`;
+        
+        showBookingDetailsModal(slotData, iso, timeNorm);
+        // Custom modal for booking details
+        function showBookingDetailsModal(slotData, iso, timeNorm) {
+          // Calculate total hours by counting all slots with same bookingId
+          let totalHours = 1; // default to 1 hour for single slot
+          if (slotData.bookingId) {
+            let slotCount = 0;
+            Object.keys(bookedSlots).forEach(date => {
+              Object.keys(bookedSlots[date]).forEach(time => {
+                if (bookedSlots[date][time].bookingId === slotData.bookingId) {
+                  slotCount++;
+                }
+              });
+            });
+            totalHours = slotCount;
+          }
+          
+          let modal = document.getElementById('bookingDetailsModal');
+          if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'bookingDetailsModal';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.background = 'rgba(30,30,30,0.65)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '99999';
+            modal.innerHTML = `
+              <div style="background:#232323; color:#eee; border-radius:14px; box-shadow:0 4px 32px #000a; min-width:320px; max-width:90vw; padding:28px 24px 20px 24px; font-size:0.9rem; font-family:inherit; opacity:0.93; font-weight:300;">
+                <div style="font-size:0.95rem; font-weight:400; margin-bottom:16px; color:#fff; letter-spacing:0.3px;">BOOKING DETAILS</div>
+                <div style="margin-bottom:7px; font-weight:300;"><span style='font-weight:300;'>Booked By:</span> ${slotData.fullname || slotData.bookedBy || 'N/A'}</div>
+                ${slotData.position ? `<div style=\"margin-bottom:7px; font-weight:300;\"><span style='font-weight:300;'>Position:</span> ${slotData.position}</div>` : ''}
+                <div style="margin-bottom:7px; font-weight:300;"><span style='font-weight:300;'>Faculty:</span> ${slotData.faculty || 'N/A'}</div>
+                <div style="margin-bottom:7px; font-weight:300;"><span style='font-weight:300;'>Hours:</span> ${totalHours} hour${totalHours !== 1 ? 's' : ''}</div>
+                <div style="margin-bottom:7px; font-weight:300;"><span style='font-weight:300;'>Event Type:</span> ${slotData.eventType || 'N/A'}</div>
+                
+                <button id="closeBookingDetailsModal" style="margin-top:6px; background:#444; color:#fff; border:none; border-radius:8px; padding:7px 24px; font-size:0.9rem; cursor:pointer; font-weight:300;">OK</button>
+              </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+              if (e.target === modal || e.target.id === 'closeBookingDetailsModal') {
+                modal.remove();
+              }
+            });
+          } else {
+            modal.style.display = 'flex';
+          }
+        }
+        
+        // Admin release functionality
+        if (adminModeCheckbox.checked) {
           const adminKey = document.getElementById('admin-key')?.value.trim() || '';
           if (!adminKey) {
-            alert('Please enter the admin key before releasing a slot.');
+            alert('Please enter the admin key to release slots.');
             return;
           }
-
-          const iso = td.dataset.isodate;                  // e.g. 2025-08-06
-          const timeNorm = normalizeTime(td.dataset.time); // e.g. 10.00-11.00
+          
           const collection = getTimetableCollectionName(selectedFacilityLabel);
-
           if (!confirm(`Release this slot?\n${selectedFacilityLabel}\n${iso} • ${timeNorm}`)) return;
-
+          
           try {
             const res = await fetch(`${API}/api/timetable/${encodeURIComponent(collection)}`, {
               method: 'DELETE',
               headers: {
                 'Content-Type': 'application/json',
-                'x-admin-key': adminKey // must match server .env ADMIN_API_KEY
+                'x-admin-key': adminKey
               },
               body: JSON.stringify({ date: iso, time: timeNorm })
             });
@@ -402,14 +674,14 @@
               alert('Failed to release slot: ' + (err.error || err.message || res.statusText));
               return;
             }
-            await renderTable(); // refresh grid after release
+            await renderTable();
           } catch (e) {
             console.error(e);
             alert('Network error while releasing slot');
           }
-        };
-      });
-    }
+        }
+      };
+    });
   }
 
   /* ========= FACILITY PICKER ========= */
@@ -429,15 +701,29 @@
 
     facilities.forEach((fac, idx) => {
       const btn = document.createElement("button");
-      btn.textContent = fac.facilityName;
-      btn.className = "facility-btn" + (idx === initialSelectedIdx ? " active" : "");
+      const facilityStatus = (fac.status || 'available').toLowerCase();
+      // ✅ Disable facilities that are under maintenance or temporarily unavailable
+      const isUnavailable = facilityStatus === 'maintenance' || facilityStatus === 'unavailable';
+      const statusLabel = isUnavailable ? ` [${facilityStatus === 'maintenance' ? 'Under Maintenance' : 'Temporarily Unavailable'}]` : '';
+      
+      btn.textContent = fac.facilityName + statusLabel;
+      btn.className = "facility-btn" + (idx === initialSelectedIdx && !isUnavailable ? " active" : "");
       btn.dataset.facility = fac.facilityName;
+      btn.disabled = isUnavailable;
+      if (isUnavailable) {
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+      }
       facilitySelector.appendChild(btn);
-      if (idx === initialSelectedIdx) {
+      if (idx === initialSelectedIdx && !isUnavailable) {
         selectedFacilityLabel = fac.facilityName;
         selectedFacility = fac.facilityName;
       }
       btn.onclick = async ()=> {
+        if (isUnavailable) {
+          alert("This facility is not available for booking.");
+          return;
+        }
         document.querySelectorAll('.facility-btn').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         selectedFacilityLabel = fac.facilityName;
@@ -474,8 +760,10 @@
     const adminMode = document.getElementById('admin-mode').checked;
     const collection = getTimetableCollectionName(selectedFacilityLabel);
     const tds = currentSelectedCells.sort((a,b)=> +a.dataset.colIndex - +b.dataset.colIndex || +a.dataset.rowIndex - +b.dataset.rowIndex);
+    const urlParams = new URLSearchParams(window.location.search);
+    const isEmergency = urlParams.get('emergency') === '1';
 
-    if (!adminMode) {
+    if (!adminMode && !isEmergency) {
       // ==== NORMAL USER: go to booking form page with same-day slots ====
       const date = tds[0].dataset.date;
       const timesArr = tds.map(td=> normalizeTime(td.dataset.time));
@@ -484,6 +772,92 @@
       params.append("date", encodeURIComponent(date));
       timesArr.forEach(time=> params.append("times[]", time));
       window.location.href = `bookingLH.html?${params.toString()}`;
+      return;
+    }
+
+    if (isEmergency && !adminMode) {
+      // ==== EMERGENCY BOOKING: instant book without form ====
+      const fullname = localStorage.getItem('lhms_fullname') || 'Emergency User';
+      const email = localStorage.getItem('lhms_email') || '';
+      const phone = (localStorage.getItem('lhms_phone') || '').trim() || 'N/A';
+      const userId = (localStorage.getItem('lhms_userId') || '').trim();
+      
+      if (!email) {
+        alert('Please login to make emergency bookings.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const iso = tds[0].dataset.isodate;
+      const timesArr = tds.map(td=> normalizeTime(td.dataset.time));
+      
+      const bookingData = {
+        fullname: fullname,
+        email: email,
+        phone: phone,
+        position: '',
+        facultyDept: '',
+        facility: selectedFacilityLabel,
+        bookingDate: iso,
+        startTime: timesArr[0].split('-')[0].replace('.', ':'),
+        endTime: timesArr[timesArr.length-1].split('-')[1].replace('.', ':'),
+        participants: 1,
+        purpose: 'Emergency Booking',
+        description: 'Emergency booking - instant approval',
+        isEmergency: true,
+        terms: true,
+        ownerId: userId || null,
+        ownerEmail: email,
+        ownerName: fullname
+      };
+
+      try {
+        const bookingRes = await fetch(`${API}/api/booking`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(bookingData)
+        });
+
+        if (!bookingRes.ok) {
+          const err = await bookingRes.json();
+          alert('Emergency booking failed: ' + (err.message || 'Unknown error'));
+          return;
+        }
+
+        const bookingResult = await bookingRes.json();
+        const bookingId = bookingResult._id || 'emergency-' + Date.now();
+
+        const timetableRes = await fetch(`${API}/api/timetable/${encodeURIComponent(collection)}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            date: iso,
+            times: timesArr,
+            bookedBy: fullname,
+            bookingId: bookingId,
+            faculty: '',
+            eventType: 'Emergency Booking',
+            additionalNotes: 'Emergency booking - instant approval',
+            fullname: fullname,
+            email: email,
+            phone: phone,
+            position: ''
+          })
+        });
+
+        if (!timetableRes.ok) {
+          const err = await timetableRes.json();
+          alert('Failed to update timetable: ' + (err.message || 'Unknown error'));
+          return;
+        }
+
+        alert('✅ Emergency booking confirmed instantly!');
+        await renderTable();
+        clearSelectedCells();
+      } catch (e) {
+        console.error(e);
+        alert('Network error during emergency booking');
+      }
       return;
     }
 
@@ -534,9 +908,48 @@
 
   /* ========= INIT ========= */
   window.addEventListener('DOMContentLoaded', async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdminAccess = urlParams.get('admin') === 'true';
+    const dateParam = urlParams.get('date');
+
+    document.querySelector('.admin-controls').classList.add('show');
+    if (isAdminAccess) {
+      document.querySelectorAll('.admin-only').forEach(el => el.classList.add('show'));
+    }
+
+    // User Account Icon - direct to adminMAIN.html for admin, user.html for users
+    document.getElementById('accountBtn').onclick = function() {
+      if (localStorage.getItem('lhms_loggedIn') === 'yes') {
+        const email = localStorage.getItem('lhms_email') || '';
+        if (email === 'admin01@gmail.com' || isAdminAccess) {
+          window.location.href = "adminMAIN.html";
+        } else {
+          window.location.href = "user.html";
+        }
+      } else {
+        alert("Please login first!");
+        window.location.href = "index.html";
+      }
+    };
+
+    // If date param is present, set selectedWeekOffset so that the week containing dateParam is shown
+    if (dateParam) {
+      const targetDate = new Date(dateParam);
+      const today = new Date();
+      // Get Monday of current week and target week
+      const getMonday = d => { const t = new Date(d); const day = t.getDay(), diff = t.getDate() - day + (day === 0 ? -6 : 1); return new Date(t.setDate(diff)); };
+      const thisMon = getMonday(today);
+      const targetMon = getMonday(targetDate);
+      // Calculate week offset (-1, 0, 1)
+      const diffDays = Math.floor((targetMon - thisMon) / (1000*60*60*24));
+      selectedWeekOffset = Math.max(-1, Math.min(1, Math.round(diffDays/7)));
+    }
+
     await initFacilitySelector();
     updateWeekNav();
     await renderTable();
+
+    // (No highlight for date column as requested)
   });
 
   async function loadBookedSlots() {
@@ -576,3 +989,4 @@
   </script>
   </body>
   </html>
+
