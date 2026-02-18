@@ -1,6 +1,6 @@
-# Lecture Hall Management System (LHMS)
+# University Hall Management System (UHMS)
 
-Web app to manage campus facilities (lecture halls, labs, seminar rooms, auditoriums, meeting rooms). Admins create/edit/delete facilities with images; staff/union members browse and book.
+UHMS is a campus facility management system built with Node.js, Express, MongoDB, and Multer. It lets administrators manage lecture halls, labs, seminar rooms, and auditoriums, while staff can browse and book facilities.
 
 ## Features
 - Facility CRUD with image upload (admin only)
