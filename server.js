@@ -1038,14 +1038,33 @@ app.delete('/api/timetable/:collection', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Missing collection, date or time' });
     }
     const Timetable = getOrCreateTimetableModel(decodedCollection);
-    const result = await Timetable.deleteOne({ date, time });
+    console.log(`[Release Slot] Attempting to delete: collection=${decodedCollection}, date=${date}, time=${time}`);
+    
+    // Try exact match first
+    let result = await Timetable.deleteOne({ date, time });
+    console.log(`[Release Slot] Delete result (exact):`, result);
+    
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: 'Slot not found' });
+      // Try flexible time matching (normalize to dot format)
+      const timeNormalized = String(time).replace(/:/g, '.').replace(/\s+/g, '');
+      console.log(`[Release Slot] Trying normalized time: ${timeNormalized}`);
+      
+      result = await Timetable.deleteOne({ 
+        date, 
+        time: { $regex: '^' + timeNormalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
+      });
+      console.log(`[Release Slot] Delete result (regex):`, result);
+      
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: 'Slot not found', debug: { date, time, timeNormalized } });
+      }
     }
     return res.json({ message: 'Slot released successfully' });
   } catch (err) {
     console.error('[Release Slot Error]', err);
-    return res.status(500).json({ error: 'Failed to release slot' });
+    return res.status(500).json({ error: 'Failed to release slot', detail: err.message });
+  }
+});
   }
 });
 
